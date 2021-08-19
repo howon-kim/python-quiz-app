@@ -3,65 +3,22 @@ from tkinter import *
 import random
 import sqlite3 
 import time
+import csv
+import os
+from datetime import datetime
+from quizFile import *
 
-def loginPage(logdata):
-    sup.destroy()
-    global login
-    login = Tk()
-    
-    user_name = StringVar()
-    password = StringVar()
-    
-    login_canvas = Canvas(login,width=720,height=440,bg="blue")
-    login_canvas.pack()
-
-    login_frame = Frame(login_canvas,bg="white")
-    login_frame.place(relwidth=0.8,relheight=0.8,relx=0.1,rely=0.1)
-
-    heading = Label(login_frame,text="Quiz App Login",fg="black",bg="white")
-    heading.config(font=('calibri 40'))
-    heading.place(relx=0.2,rely=0.1)
-
-    #USER NAME
-    ulabel = Label(login_frame,text="Username",fg='black',bg='white')
-    ulabel.place(relx=0.21,rely=0.4)
-    uname = Entry(login_frame,bg='#d3d3d3',fg='black',textvariable = user_name)
-    uname.config(width=42)
-    uname.place(relx=0.31,rely=0.4)
-
-    #PASSWORD
-    plabel = Label(login_frame,text="Password",fg='black',bg='white')
-    plabel.place(relx=0.215,rely=0.5)
-    pas = Entry(login_frame,bg='#d3d3d3',fg='black',show="*",textvariable = password)
-    pas.config(width=42)
-    pas.place(relx=0.31,rely=0.5)
-
-    def check():
-        for a,b,c,d in logdata:
-            if b == uname.get() and c == pas.get():
-                menu()
-                break
-        else:
-            error = Label(login_frame,text="Wrong Username or Password!",fg='black',bg='white')
-            error.place(relx=0.37,rely=0.7)
-    
-    #LOGIN BUTTON
-    log = Button(login_frame,text='Login',padx=5,pady=5,width=5,command=check)
-    log.configure(width = 15,height=1, activebackground = "#33B5E5", relief = FLAT)
-    log.place(relx=0.4,rely=0.6)
-    
-    
-    login.mainloop()
 
 def signUpPage():
     root.destroy()
     global sup
+    global wr
     sup = Tk()
     
     fname = StringVar()
-    uname = StringVar()
-    passW = StringVar()
-    country = StringVar()
+    lname = StringVar()
+    age = StringVar()
+    wr = None
     
     
     sup_canvas = Canvas(sup,width=720,height=440,bg="blue")
@@ -70,58 +27,61 @@ def signUpPage():
     sup_frame = Frame(sup_canvas,bg="white")
     sup_frame.place(relwidth=0.8,relheight=0.8,relx=0.1,rely=0.1)
 
-    heading = Label(sup_frame,text="Quiz App SignUp",fg="black",bg="white")
+    heading = Label(sup_frame,text="정보입력",fg="black",bg="white")
     heading.config(font=('calibri 40'))
     heading.place(relx=0.2,rely=0.1)
 
     #full name
-    flabel = Label(sup_frame,text="Full Name",fg='black',bg='white')
+    flabel = Label(sup_frame,text="이름",fg='black',bg='white')
     flabel.place(relx=0.21,rely=0.4)
-    fname = Entry(sup_frame,bg='#d3d3d3',fg='black',textvariable = fname)
-    fname.config(width=42)
-    fname.place(relx=0.31,rely=0.4)
+    fentry = Entry(sup_frame,bg='#d3d3d3',fg='black',textvariable = fname)
+    fentry.config(width=42)
+    fentry.place(relx=0.31,rely=0.4)
 
     #username
-    ulabel = Label(sup_frame,text="Username",fg='black',bg='white')
+    ulabel = Label(sup_frame,text="성",fg='black',bg='white')
     ulabel.place(relx=0.21,rely=0.5)
-    user = Entry(sup_frame,bg='#d3d3d3',fg='black',textvariable = uname)
+    user = Entry(sup_frame,bg='#d3d3d3',fg='black',textvariable = lname)
     user.config(width=42)
     user.place(relx=0.31,rely=0.5)
     
     
     #password
-    plabel = Label(sup_frame,text="Password",fg='black',bg='white')
+    plabel = Label(sup_frame,text="나이",fg='black',bg='white')
     plabel.place(relx=0.215,rely=0.6)
-    pas = Entry(sup_frame,bg='#d3d3d3',fg='black',show="*",textvariable = passW)
+    pas = Entry(sup_frame,bg='#d3d3d3',fg='black', textvariable = age)
     pas.config(width=42)
     pas.place(relx=0.31,rely=0.6)
+
+
     
-    
-    
-    #country
-    clabel = Label(sup_frame,text="Country",fg='black',bg='white')
-    clabel.place(relx=0.215,rely=0.7)
-    c = Entry(sup_frame,bg='#d3d3d3',fg='black',textvariable = country)
-    c.config(width=42)
-    c.place(relx=0.31,rely=0.7)
     def addUserToDataBase():
-        
-        fullname = fname.get()
-        username = user.get()
-        password = pas.get()
-        country = c.get()
+        global wr
+        fname = fentry.get()
+        lname = user.get()
+        age = pas.get()
+
+        filename = os.path.join(str(fentry.get()) + "_" + str(user.get()) + "_" + str(pas.get()) + ".csv")
+        f = open(filename, 'a', encoding='utf-8-sig')
+        wr = csv.writer(f)
+
+        wr.writerow([fname, lname, age, datetime.now()])
+
         
         conn = sqlite3.connect('quiz.db')
         create = conn.cursor()
-        create.execute('CREATE TABLE IF NOT EXISTS userSignUp(FULLNAME text, USERNAME text,PASSWORD text,COUNTRY text)')
-        create.execute("INSERT INTO userSignUp VALUES (?,?,?,?)",(fullname,username,password,country)) 
+        create.execute('CREATE TABLE IF NOT EXISTS userSignUp(FIRSTNAME text, LASTNAME text, AGE text)')
+        create.execute("INSERT INTO userSignUp VALUES (?,?,?)",(fname,lname,age)) 
         conn.commit()
         create.execute('SELECT * FROM userSignUp')
         z=create.fetchall()
         print(z)
-#        L2.config(text="Username is "+z[0][0]+"\nPassword is "+z[-1][1])
         conn.close()
-        loginPage(z)
+        #loginPage(z)
+        sup.destroy()
+
+        menu()
+
     def gotoLogin():
         conn = sqlite3.connect('quiz.db')
         create = conn.cursor()
@@ -141,7 +101,6 @@ def signUpPage():
     sup.mainloop()
 
 def menu():
-    login.destroy()
     global menu 
     menu = Tk()
     
@@ -154,23 +113,23 @@ def menu():
 
     
     
-    wel = Label(menu_canvas,text=' W E L C O M E  T O  Q U I Z  S T A T I O N ',fg="white",bg="#101357") 
+    wel = Label(menu_canvas,text='리뷰미 웹소설 문제',fg="white",bg="#101357") 
     wel.config(font=('Broadway 22'))
     wel.place(relx=0.1,rely=0.02)
     
     
-    level = Label(menu_frame,text='Select your Difficulty Level !!',bg="white",font="calibri 18")
+    level = Label(menu_frame,text='웹소설 종류를 선택해 주세요',bg="white",font="calibri 18")
     level.place(relx=0.25,rely=0.3)
     
     
     var = IntVar()
-    easyR = Radiobutton(menu_frame,text='Easy',bg="white",font="calibri 16",value=1,variable = var)
+    easyR = Radiobutton(menu_frame,text='아카데미 고인물',bg="white",font="calibri 16",value=1,variable = var)
     easyR.place(relx=0.25,rely=0.4)
     
-    mediumR = Radiobutton(menu_frame,text='Medium',bg="white",font="calibri 16",value=2,variable = var)
+    mediumR = Radiobutton(menu_frame,text='피자 타이거 스파게티 드래곤',bg="white",font="calibri 16",value=2,variable = var)
     mediumR.place(relx=0.25,rely=0.5)
     
-    hardR = Radiobutton(menu_frame,text='Hard',bg="white",font="calibri 16",value=3,variable = var)
+    hardR = Radiobutton(menu_frame,text='하렘의 남자들',bg="white",font="calibri 16",value=3,variable = var)
     hardR.place(relx=0.25,rely=0.6)
     
     
@@ -179,13 +138,17 @@ def menu():
         x = var.get()
         print(x)
         if x == 1:
+            wr.writerow([easyR.cget("text")])
             menu.destroy()
             easy()
+
         elif x == 2:
+            wr.writerow([easyR.cget("text")])
             menu.destroy()
             medium()
         
         elif x == 3:
+            wr.writerow([easyR.cget("text")])
             menu.destroy()
             difficult()
         else:
@@ -193,127 +156,95 @@ def menu():
     letsgo = Button(menu_frame,text="Let's Go",bg="white",font="calibri 12",command=navigate)
     letsgo.place(relx=0.25,rely=0.8)
     menu.mainloop()
+
 def easy():
+    global easy
+    easy = Tk()
     
-    global e
-    e = Tk()
-    
-    easy_canvas = Canvas(e,width=720,height=440,bg="#101357")
+    easy_canvas = Canvas(easy,width=720,height=440,bg="#101357")
     easy_canvas.pack()
 
     easy_frame = Frame(easy_canvas,bg="white")
     easy_frame.place(relwidth=0.8,relheight=0.8,relx=0.1,rely=0.1)
 
+
+    
     
     def countDown():
         check = 0
-        for k in range(10, 0, -1):
-            
+        for k in range(30, 0, -1):
             if k == 1:
                 check=-1
             timer.configure(text=k)
             easy_frame.update()
             time.sleep(1)
-            
         timer.configure(text="Times up!")
         if check==-1:
             return (-1)
         else:
             return 0
+
     global score
     score = 0
-    
-    easyQ = [
-                 [
-                     "What will be the output of the following Python code? \nl=[1, 0, 2, 0, 'hello', '', []] \nlist(filter(bool, nl))",
-                     "[1, 0, 2, ‘hello’, '', []]",
-                     "Error",
-                     "[1, 2, ‘hello’]",
-                     "[1, 0, 2, 0, ‘hello’, '', []]" 
-                 ] ,
-                 [
-                     "What will be the output of the following Python expression if the value of x is 34? \nprint(“%f”%x)" ,
-                    "34.00",
-                    "34.000000",
-                    "34.0000",
-                    "34.00000000"
-                     
-                 ],
-                [
-                    "What will be the value of X in the following Python expression? \nX = 2+9*((3*12)-8)/10" ,
-                    "30.8",
-                    "27.2",
-                    "28.4",
-                    "30.0"
-                ],
-                [
-                    "Which of these in not a core data type?" ,
-                    "Tuples",
-                    "Dictionary",
-                    "Lists",
-                    "Class"
-                ],
-                [
-                    "Which of the following represents the bitwise XOR operator?" ,
-                    "&",
-                    "!",
-                    "^",
-                    "|"
-                ]
-            ]
-    answer = [
-                "[1, 2, ‘hello’]",
-                "34.000000",
-                "27.2",
-                "Class",
-                "^"
-             ]
-    li = ['',0,1,2,3,4]
+        
+    li = ['',0,1,2,3,4,5,6,7,8,9]
     x = random.choice(li[1:])
-    
-    ques = Label(easy_frame,text =easyQ[x][0],font="calibri 12",bg="white")
+
+    ques = Label(easy_frame,text =quiz_academy[x][0],font="calibri 12",bg="white")
     ques.place(relx=0.5,rely=0.2,anchor=CENTER)
 
     var = StringVar()
     
-    a = Radiobutton(easy_frame,text=easyQ[x][1],font="calibri 10",value=easyQ[x][1],variable = var,bg="white")
+    a = Radiobutton(easy_frame,text=quiz_academy[x][1],font="calibri 10",value=quiz_academy[x][1],variable = var,bg="white")
     a.place(relx=0.5,rely=0.42,anchor=CENTER)
 
-    b = Radiobutton(easy_frame,text=easyQ[x][2],font="calibri 10",value=easyQ[x][2],variable = var,bg="white")
+    b = Radiobutton(easy_frame,text=quiz_academy[x][2],font="calibri 10",value=quiz_academy[x][2],variable = var,bg="white")
     b.place(relx=0.5,rely=0.52,anchor=CENTER)
 
-    c = Radiobutton(easy_frame,text=easyQ[x][3],font="calibri 10",value=easyQ[x][3],variable = var,bg="white")
+    c = Radiobutton(easy_frame,text=quiz_academy[x][3],font="calibri 10",value=quiz_academy[x][3],variable = var,bg="white")
     c.place(relx=0.5,rely=0.62,anchor=CENTER) 
 
-    d = Radiobutton(easy_frame,text=easyQ[x][4],font="calibri 10",value=easyQ[x][4],variable = var,bg="white")
+    d = Radiobutton(easy_frame,text=quiz_academy[x][4],font="calibri 10",value=quiz_academy[x][4],variable = var,bg="white")
     d.place(relx=0.5,rely=0.72,anchor=CENTER) 
+
+    e = Radiobutton(easy_frame,text=quiz_academy[x][5],font="calibri 10",value=quiz_academy[x][5],variable = var,bg="white")
+    e.place(relx=0.5,rely=0.82,anchor=CENTER) 
+
+    f = Radiobutton(easy_frame,text=quiz_academy[x][6],font="calibri 10",value=quiz_academy[x][6],variable = var,bg="white")
+    f.place(relx=0.5,rely=0.92,anchor=CENTER) 
     
     li.remove(x)
     
-    timer = Label(e)
-    timer.place(relx=0.8,rely=0.82,anchor=CENTER)
-    
-    
+    timer = Label(easy)
+    timer.place(relx=0.8,rely=0.2,anchor=CENTER)
+        
     
     def display():
-        
+        nextQuestion.configure(text='다음문제',command=calc)
+
         if len(li) == 1:
-                e.destroy()
+                easy.destroy()
                 showMark(score)
+                #f.close()
         if len(li) == 2:
-            nextQuestion.configure(text='End',command=calc)
+            nextQuestion.configure(text='끝내기',command=calc)
                 
         if li:
             x = random.choice(li[1:])
-            ques.configure(text =easyQ[x][0])
+            ques.configure(text =quiz_academy[x][0])
             
-            a.configure(text=easyQ[x][1],value=easyQ[x][1])
+            a.configure(text=quiz_academy[x][1],value=quiz_academy[x][1])
       
-            b.configure(text=easyQ[x][2],value=easyQ[x][2])
+            b.configure(text=quiz_academy[x][2],value=quiz_academy[x][2])
       
-            c.configure(text=easyQ[x][3],value=easyQ[x][3])
+            c.configure(text=quiz_academy[x][3],value=quiz_academy[x][3])
       
-            d.configure(text=easyQ[x][4],value=easyQ[x][4])
+            d.configure(text=quiz_academy[x][4],value=quiz_academy[x][4])
+
+            e.configure(text=quiz_academy[x][5],value=quiz_academy[x][5])
+
+            f.configure(text=quiz_academy[x][6],value=quiz_academy[x][6])
+
             
             li.remove(x)
             print(li)
@@ -324,320 +255,37 @@ def easy():
             
     def calc():
         global score
-        if (var.get() in answer):
+        temp = []
+        temp.append(abs(len(li) - 11))
+        print(var.get())
+        if (var.get() in sol_academy):
             score+=1
-        display()
-    
-    submit = Button(easy_frame,command=calc,text="Submit")
-    submit.place(relx=0.5,rely=0.82,anchor=CENTER)
-    
-    nextQuestion = Button(easy_frame,command=display,text="Next")
-    nextQuestion.place(relx=0.87,rely=0.82,anchor=CENTER)
-    
-    y = countDown()
-    if y == -1:
-        display()
-    e.mainloop()
-    
-    
-def medium():
-    
-    global m
-    m = Tk()
-    
-    med_canvas = Canvas(m,width=720,height=440,bg="#101357")
-    med_canvas.pack()
-
-    med_frame = Frame(med_canvas,bg="white")
-    med_frame.place(relwidth=0.8,relheight=0.8,relx=0.1,rely=0.1)
-
-    
-    def countDown():
-        check = 0
-        for k in range(10, 0, -1):
-            
-            if k == 1:
-                check=-1
-            timer.configure(text=k)
-            med_frame.update()
-            time.sleep(1)
-            
-        timer.configure(text="Times up!")
-        if check==-1:
-            return (-1)
+            temp.append("o")
         else:
-            return 0
-        
-    global score
-    score = 0
-    
-    mediumQ = [
-                [
-                    "Which of the following is not an exception handling keyword in Python?",
-                     "accept",
-                     "finally",
-                     "except",
-                     "try"
-                ],
-                [
-                    "Suppose list1 is [3, 5, 25, 1, 3], what is min(list1)?",
-                    "3",
-                    "5",
-                    "25",
-                    "1"
-                ],
-                [
-                    "Suppose list1 is [2, 33, 222, 14, 25], What is list1[-1]?",
-                    "Error",
-                    "None",
-                    "25",
-                    "2"
-                ],
-                [
-                    "print(0xA + 0xB + 0xC):",
-                    "0xA0xB0xC",
-                    "Error",
-                    "0x22",
-                    "33"
-                ],
-                [
-                    "Which of the following is invalid?",
-                    "_a = 1",
-                    "__a = 1",
-                    "__str__ = 1",
-                    "none of the mentioned"
-                ], 
-            ]
-    answer = [
-            "accept",
-            "1",
-            "25",
-            "33",
-            "none of the mentioned"
-            ]
-    
-    li = ['',0,1,2,3,4]
-    x = random.choice(li[1:])
-    
-    ques = Label(med_frame,text =mediumQ[x][0],font="calibri 12",bg="white")
-    ques.place(relx=0.5,rely=0.2,anchor=CENTER)
-
-    var = StringVar()
-    
-    a = Radiobutton(med_frame,text=mediumQ[x][1],font="calibri 10",value=mediumQ[x][1],variable = var,bg="white")
-    a.place(relx=0.5,rely=0.42,anchor=CENTER)
-
-    b = Radiobutton(med_frame,text=mediumQ[x][2],font="calibri 10",value=mediumQ[x][2],variable = var,bg="white")
-    b.place(relx=0.5,rely=0.52,anchor=CENTER)
-
-    c = Radiobutton(med_frame,text=mediumQ[x][3],font="calibri 10",value=mediumQ[x][3],variable = var,bg="white")
-    c.place(relx=0.5,rely=0.62,anchor=CENTER) 
-
-    d = Radiobutton(med_frame,text=mediumQ[x][4],font="calibri 10",value=mediumQ[x][4],variable = var,bg="white")
-    d.place(relx=0.5,rely=0.72,anchor=CENTER) 
-    
-    li.remove(x)
-    
-    timer = Label(m)
-    timer.place(relx=0.8,rely=0.82,anchor=CENTER)
-    
-    
-    
-    def display():
-        
-        if len(li) == 1:
-                m.destroy()
-                showMark(score)
-        if len(li) == 2:
-            nextQuestion.configure(text='End',command=calc)
-                
-        if li:
-            x = random.choice(li[1:])
-            ques.configure(text =mediumQ[x][0])
-            
-            a.configure(text=mediumQ[x][1],value=mediumQ[x][1])
-      
-            b.configure(text=mediumQ[x][2],value=mediumQ[x][2])
-      
-            c.configure(text=mediumQ[x][3],value=mediumQ[x][3])
-      
-            d.configure(text=mediumQ[x][4],value=mediumQ[x][4])
-            
-            li.remove(x)
-            print(li)
-            y = countDown()
-            if y == -1:
-                display()
-
-            
-    def calc():
-        global score
-        if (var.get() in answer):
-            score+=1
+            temp.append("x")
+        temp.append(str(30 - int(timer.cget("text"))))
+        print(temp)
+        wr.writerow(temp)
         display()
     
-    submit = Button(med_frame,command=calc,text="Submit")
-    submit.place(relx=0.5,rely=0.82,anchor=CENTER)
-    
-    nextQuestion = Button(med_frame,command=display,text="Next")
-    nextQuestion.place(relx=0.87,rely=0.82,anchor=CENTER)
+    nextQuestion = Button(easy_frame,command=calc,text="다음문제")
+    nextQuestion.place(relx=0.87,rely=0.92,anchor=CENTER)
     
     y = countDown()
     if y == -1:
         display()
-    m.mainloop()
-def difficult():
+    easy.mainloop()
     
-       
-    global h
-    h = Tk()
-    
-    hard_canvas = Canvas(h,width=720,height=440,bg="#101357")
-    hard_canvas.pack()
-
-    hard_frame = Frame(hard_canvas,bg="white")
-    hard_frame.place(relwidth=0.8,relheight=0.8,relx=0.1,rely=0.1)
-
-    
-    def countDown():
-        check = 0
-        for k in range(10, 0, -1):
-            
-            if k == 1:
-                check=-1
-            timer.configure(text=k)
-            hard_frame.update()
-            time.sleep(1)
-            
-        timer.configure(text="Times up!")
-        if check==-1:
-            return (-1)
-        else:
-            return 0
-        
-    global score
-    score = 0
-    
-    hardQ = [
-                [
-       "All keywords in Python are in _________",
-        "lower case",
-        "UPPER CASE",
-        "Capitalized",
-        "None of the mentioned"
-    ],
-    [
-        "Which of the following cannot be a variable?",
-        "__init__",
-        "in",
-        "it",
-        "on"
-    ],
-    [
-     "Which of the following is a Python tuple?",
-        "[1, 2, 3]",
-        "(1, 2, 3)",
-        "{1, 2, 3}",
-        "{}"   
-    ],
-    [
-        "What is returned by math.ceil(3.4)?",
-        "3",
-        "4",
-        "4.0",
-        "3.0"
-    ],
-    [
-        "What will be the output of print(math.factorial(4.5))?",
-        "24",
-        "120",
-        "error",
-        "24.0"
-    ] 
-            
-]
-    answer = [
-            "None of the mentioned",
-            "in",
-            "(1,2,3)",
-            "4",
-            "error"
-            ]
-    
-    li = ['',0,1,2,3,4]
-    x = random.choice(li[1:])
-    
-    ques = Label(hard_frame,text =hardQ[x][0],font="calibri 12",bg="white")
-    ques.place(relx=0.5,rely=0.2,anchor=CENTER)
-
-    var = StringVar()
-    
-    a = Radiobutton(hard_frame,text=hardQ[x][1],font="calibri 10",value=hardQ[x][1],variable = var,bg="white")
-    a.place(relx=0.5,rely=0.42,anchor=CENTER)
-
-    b = Radiobutton(hard_frame,text=hardQ[x][2],font="calibri 10",value=hardQ[x][2],variable = var,bg="white")
-    b.place(relx=0.5,rely=0.52,anchor=CENTER)
-
-    c = Radiobutton(hard_frame,text=hardQ[x][3],font="calibri 10",value=hardQ[x][3],variable = var,bg="white")
-    c.place(relx=0.5,rely=0.62,anchor=CENTER) 
-
-    d = Radiobutton(hard_frame,text=hardQ[x][4],font="calibri 10",value=hardQ[x][4],variable = var,bg="white")
-    d.place(relx=0.5,rely=0.72,anchor=CENTER) 
-    
-    li.remove(x)
-    
-    timer = Label(h)
-    timer.place(relx=0.8,rely=0.82,anchor=CENTER)
-    
-    
-    
-    def display():
-        
-        if len(li) == 1:
-                h.destroy()
-                showMark(score)
-        if len(li) == 2:
-            nextQuestion.configure(text='End',command=calc)
-                
-        if li:
-            x = random.choice(li[1:])
-            ques.configure(text =hardQ[x][0])
-            
-            a.configure(text=hardQ[x][1],value=hardQ[x][1])
-      
-            b.configure(text=hardQ[x][2],value=hardQ[x][2])
-      
-            c.configure(text=hardQ[x][3],value=hardQ[x][3])
-      
-            d.configure(text=hardQ[x][4],value=hardQ[x][4])
-            
-            li.remove(x)
-            print(li)
-            y = countDown()
-            if y == -1:
-                display()
-
-            
-    def calc():
-        global score
-        if (var.get() in answer):
-            score+=1
-        display()
-    
-    submit = Button(hard_frame,command=calc,text="Submit")
-    submit.place(relx=0.5,rely=0.82,anchor=CENTER)
-    
-    nextQuestion = Button(hard_frame,command=display,text="Next")
-    nextQuestion.place(relx=0.87,rely=0.82,anchor=CENTER)
-    
-    y = countDown()
-    if y == -1:
-        display()
-    h.mainloop()
 
 def showMark(mark):
     global sh
     sh = Tk()
+
+    def exit():
+        sh.destroy()
+
+
+
     
     show_canvas = Canvas(sh,width=720,height=440,bg="#101357")
     show_canvas.pack()
@@ -648,8 +296,14 @@ def showMark(mark):
     st = "Your score is "+str(mark)
     mlabel = Label(show_canvas,text=st,fg="black")
     mlabel.place(relx=0.5,rely=0.2,anchor=CENTER)
-    
+
+    sp = Button(show_canvas,text='종료',padx=5,pady=5,width=5,command = exit,bg='green')
+    sp.configure(width = 15,height=1, activebackground = "#33B5E5", relief = FLAT)
+    sp.place(relx=0.4,rely=0.8)
+
     sh.mainloop()
+
+
 def start():
     global root 
     root = Tk()
@@ -658,7 +312,7 @@ def start():
     img = PhotoImage(file="back.png")
     canvas.create_image(50,10,image=img,anchor=NW)
 
-    button = Button(root, text='Start',command = signUpPage) 
+    button = Button(root, text='시작',command = signUpPage) 
     button.configure(width = 102,height=2, activebackground = "#33B5E5", bg ='green', relief = RAISED)
     button.grid(column = 0 , row = 2)
 
